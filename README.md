@@ -6,6 +6,12 @@ inalterable (cadena de hash), alertas de plazos, reportes, exportación del expe
 
 Laravel 9 · PHP 8.2 · SQL Server 2022 · Docker. Basado en la plantilla y la infraestructura de SGQA.
 
+## Modelo de datos
+
+![Modelo de datos](docs/modelo-datos.png)
+
+Versión editable: `docs/modelo-datos.mmd` (Mermaid). Para regenerar la imagen: `python docs/generar_modelo_datos.py`.
+
 ## Levantar
 
 ```bash
