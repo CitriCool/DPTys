@@ -1,0 +1,237 @@
+---
+title: DPTyS — Modelo de datos del módulo de tesis
+---
+erDiagram
+    %% ===== Estructura académica y reglas =====
+    instituciones {
+        bigint id PK
+        string nombre
+        string sigla UK
+        bool activo
+    }
+    programas {
+        bigint id PK
+        bigint institucion_id FK
+        string nombre
+        string sigla
+        bool activo
+    }
+    regla_versiones {
+        bigint id PK
+        bigint programa_id FK
+        string version
+        string nombre
+        string normativa "ej. VIP 28/2024"
+        date vigente_desde
+        bool activa
+    }
+    cohortes {
+        bigint id PK
+        bigint programa_id FK
+        bigint regla_version_id FK
+        int anio
+        string nombre
+    }
+    hito_plantillas {
+        bigint id PK
+        bigint regla_version_id FK
+        string codigo
+        string nombre
+        int orden
+        int plazo_meses "desde la inscripción"
+        bool requiere_entrega
+        bool requiere_evaluacion
+        string referencia_normativa
+    }
+    estados_tesis {
+        string codigo PK
+        string nombre
+        string color
+        int orden
+        bool final
+    }
+    transiciones {
+        bigint id PK
+        bigint regla_version_id FK
+        string estado_desde FK
+        string estado_hacia FK
+        string rol "rol que puede aplicarla"
+        string accion
+        bool requiere_fundamento
+        bool requiere_documento
+    }
+
+    %% ===== Personas y permisos =====
+    users {
+        bigint id PK
+        string name
+        string email UK
+        string rut
+        string password
+        bool activo
+        date acceso_hasta "evaluadores externos"
+    }
+    roles {
+        bigint id PK
+        string name "administrador, direccion_programa, secretaria, guia, doctorando, evaluador_externo, tecnico"
+    }
+    model_has_roles {
+        bigint role_id FK
+        bigint model_id FK
+    }
+    programa_user {
+        bigint id PK
+        bigint programa_id FK
+        bigint user_id FK
+        string rol "ámbito del rol"
+    }
+
+    %% ===== Expediente de tesis =====
+    tesis {
+        bigint id PK
+        bigint institucion_id FK
+        bigint programa_id FK
+        bigint cohorte_id FK
+        bigint regla_version_id FK
+        bigint doctorando_id FK
+        string codigo UK "DPTYS-2026-001"
+        string titulo
+        string estado FK
+        date fecha_inscripcion
+        string resolucion
+        string referencia_externa "matrícula oficial"
+    }
+    tesis_responsables {
+        bigint id PK
+        bigint tesis_id FK
+        bigint user_id FK
+        string tipo "guia | coguia"
+        date desde
+        date hasta
+    }
+    tesis_hitos {
+        bigint id PK
+        bigint tesis_id FK
+        bigint hito_plantilla_id FK
+        string nombre
+        int orden
+        date fecha_limite
+        string estado "pendiente | entregado | observado | aprobado"
+        datetime fecha_cumplimiento
+    }
+    entregas {
+        bigint id PK
+        bigint tesis_id FK
+        bigint tesis_hito_id FK
+        bigint user_id FK
+        string titulo
+    }
+    entrega_versiones {
+        bigint id PK
+        bigint entrega_id FK
+        bigint user_id FK
+        int numero
+        string nombre_archivo
+        string ruta
+        bigint tamano
+        char sha256 "huella del archivo"
+    }
+    observaciones {
+        bigint id PK
+        bigint tesis_id FK
+        bigint tesis_hito_id FK
+        bigint entrega_version_id FK
+        bigint parent_id FK "respuesta a"
+        bigint user_id FK
+        string rol_ejercido
+        text texto
+        bool resuelta
+    }
+    evaluaciones {
+        bigint id PK
+        bigint tesis_id FK
+        bigint tesis_hito_id FK
+        bigint entrega_version_id FK
+        bigint evaluador_id FK
+        bigint asignado_por FK
+        date acceso_hasta
+        string dictamen
+        text fundamento
+    }
+    decisiones {
+        bigint id PK
+        bigint tesis_id FK
+        bigint user_id FK
+        string rol_ejercido
+        string tipo "cambio_estado | prorroga | cambio_guia"
+        string estado_desde
+        string estado_hacia
+        text fundamento
+        char documento_sha256
+    }
+    actas {
+        bigint id PK
+        bigint tesis_id FK
+        bigint user_id FK
+        string tipo "inscripcion | examen | cierre"
+        string numero
+        date fecha
+        char sha256
+    }
+    eventos_auditoria {
+        bigint id PK
+        bigint user_id FK
+        bigint tesis_id FK
+        string rol_ejercido
+        string accion
+        string entidad_tipo
+        bigint entidad_id
+        char hash_anterior "cadena de hash"
+        char hash
+        datetime created_at "solo inserción"
+    }
+    notifications {
+        uuid id PK
+        bigint notifiable_id FK
+        text data
+        datetime read_at
+    }
+
+    %% ===== Relaciones =====
+    instituciones ||--o{ programas : "tiene"
+    programas ||--o{ regla_versiones : "versiona sus reglas"
+    programas ||--o{ cohortes : "tiene"
+    regla_versiones ||--o{ cohortes : "rige a"
+    regla_versiones ||--o{ hito_plantillas : "define"
+    regla_versiones ||--o{ transiciones : "permite"
+    estados_tesis ||--o{ transiciones : "desde / hacia"
+
+    users ||--o{ model_has_roles : ""
+    roles ||--o{ model_has_roles : ""
+    users ||--o{ programa_user : "participa en"
+    programas ||--o{ programa_user : ""
+
+    instituciones ||--o{ tesis : ""
+    programas ||--o{ tesis : ""
+    cohortes ||--o{ tesis : ""
+    regla_versiones ||--o{ tesis : "reglas aplicadas"
+    estados_tesis ||--o{ tesis : "estado actual"
+    users ||--o{ tesis : "doctorando/a"
+
+    tesis ||--o{ tesis_responsables : "guía y coguía"
+    users ||--o{ tesis_responsables : ""
+    tesis ||--|{ tesis_hitos : "ruta de hitos"
+    hito_plantillas ||--o{ tesis_hitos : "origen"
+    tesis_hitos ||--o{ entregas : ""
+    entregas ||--|{ entrega_versiones : "versiones"
+    tesis ||--o{ observaciones : ""
+    entrega_versiones ||--o{ observaciones : "sobre"
+    observaciones ||--o{ observaciones : "respuestas"
+    tesis ||--o{ evaluaciones : ""
+    entrega_versiones ||--o{ evaluaciones : "versión evaluada"
+    users ||--o{ evaluaciones : "evaluador/a"
+    tesis ||--o{ decisiones : ""
+    tesis ||--o{ actas : ""
+    tesis ||--o{ eventos_auditoria : "bitácora"
+    users ||--o{ eventos_auditoria : "autor"
+    users ||--o{ notifications : "avisos"
