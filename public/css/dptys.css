@@ -1,0 +1,38 @@
+/* Estilos propios de DPTyS (sobre la plantilla AdminLTE reutilizada de SGQA) */
+.content-wrapper { background-color: whitesmoke; }
+
+/* Semáforo de hitos */
+.semaforo { display: inline-flex; align-items: center; gap: 6px; font-size: .85rem; white-space: nowrap; }
+.semaforo::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: currentColor; }
+.semaforo-vencido { color: #dc3545; }
+.semaforo-proximo { color: #e0a800; }
+.semaforo-en_plazo { color: #198754; }
+.semaforo-cumplido { color: #6c757d; }
+
+.estado-badge { color: #fff; font-weight: 500; }
+
+/* Línea de tiempo de hitos */
+.timeline-hitos { list-style: none; padding-left: 0; margin: 0; }
+.timeline-hitos > li { position: relative; padding: 0 0 18px 28px; border-left: 2px solid #dee2e6; margin-left: 8px; }
+.timeline-hitos > li:last-child { border-left-color: transparent; }
+.timeline-hitos .punto { position: absolute; left: -9px; top: 2px; width: 16px; height: 16px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 0 1px #ced4da; }
+.punto-vencido { background: #dc3545; }
+.punto-proximo { background: #ffc107; }
+.punto-en_plazo { background: #198754; }
+.punto-cumplido { background: #6c757d; }
+
+.hash { font-family: SFMono-Regular, Consolas, monospace; font-size: .75rem; color: #6c757d; word-break: break-all; }
+.observacion { border-left: 3px solid #0d6efd; padding: 6px 10px; background: #f8f9fa; border-radius: 4px; }
+.observacion.respuesta { border-left-color: #adb5bd; margin-left: 24px; background: #fff; }
+.observacion.resuelta { opacity: .7; }
+
+.avisos-menu { width: 340px; max-height: 420px; overflow-y: auto; }
+.aviso-item { white-space: normal; border-bottom: 1px solid #f1f1f1; font-size: .875rem; }
+
+.kpi .info-box-number { font-size: 1.5rem; }
+.card-header .card-title { color: inherit; }
+.nav-tabs .nav-link { color: #495057; }
+.table td, .table th { vertical-align: middle; }
+
+/* Login */
+.login-page { background: linear-gradient(135deg, #194979 0%, #2a78d6 100%); min-height: 100vh; }

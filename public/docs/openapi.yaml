@@ -1,0 +1,157 @@
+openapi: 3.0.3
+info:
+  title: DPTyS - API del módulo de tesis
+  version: 1.0.0
+  description: |
+    API REST de solo lectura de la Plataforma de Gestión Doctoral.
+    Autenticación con token personal (Bearer). Cada respuesta respeta los permisos
+    del rol indicado en la cabecera `X-Rol` (si no se indica, se usa el primer rol de la cuenta).
+servers:
+  - url: /api/v1
+security:
+  - bearerAuth: []
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  parameters:
+    XRol:
+      name: X-Rol
+      in: header
+      required: false
+      schema:
+        type: string
+        enum: [administrador, direccion_programa, secretaria, guia, doctorando, evaluador_externo, tecnico]
+    TesisId:
+      name: tesis
+      in: path
+      required: true
+      schema: { type: integer }
+  schemas:
+    Estado:
+      type: object
+      properties:
+        codigo: { type: string, example: en_desarrollo }
+        nombre: { type: string, example: En desarrollo }
+    TesisResumen:
+      type: object
+      properties:
+        id: { type: integer }
+        codigo: { type: string, example: DPTYS-2024-001 }
+        titulo: { type: string }
+        estado: { $ref: '#/components/schemas/Estado' }
+        programa: { type: string, example: DPTYS }
+        cohorte: { type: integer, example: 2024 }
+        doctorando: { type: string }
+        fecha_inscripcion: { type: string, format: date }
+    Hito:
+      type: object
+      properties:
+        id: { type: integer }
+        nombre: { type: string, example: Tesis II }
+        orden: { type: integer }
+        fecha_limite: { type: string, format: date }
+        estado: { type: string, enum: [pendiente, entregado, observado, aprobado] }
+        semaforo: { type: string, enum: [vencido, proximo, en_plazo, cumplido] }
+        fecha_cumplimiento: { type: string, format: date-time, nullable: true }
+        referencia_normativa: { type: string, nullable: true }
+    TesisDetalle:
+      allOf:
+        - $ref: '#/components/schemas/TesisResumen'
+        - type: object
+          properties:
+            resumen: { type: string, nullable: true }
+            resolucion: { type: string, nullable: true }
+            referencia_externa: { type: string, nullable: true, description: Identificador en el registro oficial (matrícula) }
+            responsables:
+              type: array
+              items:
+                type: object
+                properties:
+                  tipo: { type: string, enum: [guia, coguia] }
+                  nombre: { type: string }
+                  desde: { type: string, format: date }
+            hitos:
+              type: array
+              items: { $ref: '#/components/schemas/Hito' }
+    Evento:
+      type: object
+      properties:
+        fecha: { type: string, format: date-time }
+        accion: { type: string, example: cambio_estado }
+        usuario: { type: string, nullable: true }
+        rol: { type: string, nullable: true }
+        entidad: { type: string }
+        entidad_id: { type: integer, nullable: true }
+        hash: { type: string, description: Huella SHA-256 encadenada del evento }
+  responses:
+    NoAutorizado:
+      description: Token ausente o inválido
+    Prohibido:
+      description: El rol no tiene acceso a este expediente
+paths:
+  /tesis:
+    get:
+      summary: Lista de expedientes visibles para el rol
+      parameters:
+        - $ref: '#/components/parameters/XRol'
+        - { name: estado, in: query, schema: { type: string } }
+        - { name: programa, in: query, description: Sigla del programa, schema: { type: string } }
+        - { name: cohorte, in: query, description: Año de la cohorte, schema: { type: integer } }
+        - { name: por_pagina, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 } }
+        - { name: page, in: query, schema: { type: integer, default: 1 } }
+      responses:
+        '200':
+          description: Lista paginada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/TesisResumen' }
+                  meta:
+                    type: object
+                    properties:
+                      pagina: { type: integer }
+                      total: { type: integer }
+                      por_pagina: { type: integer }
+        '401': { $ref: '#/components/responses/NoAutorizado' }
+  /tesis/{tesis}:
+    get:
+      summary: Detalle de un expediente con responsables e hitos
+      parameters:
+        - $ref: '#/components/parameters/XRol'
+        - $ref: '#/components/parameters/TesisId'
+      responses:
+        '200':
+          description: Expediente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/TesisDetalle' }
+        '401': { $ref: '#/components/responses/NoAutorizado' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+  /tesis/{tesis}/eventos:
+    get:
+      summary: Eventos de auditoría del expediente (últimos 200)
+      parameters:
+        - $ref: '#/components/parameters/XRol'
+        - $ref: '#/components/parameters/TesisId'
+      responses:
+        '200':
+          description: Eventos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Evento' }
+        '401': { $ref: '#/components/responses/NoAutorizado' }
+        '403': { $ref: '#/components/responses/Prohibido' }

@@ -1,0 +1,50 @@
+<?php
+
+// Mensajes de validación en español (las reglas no listadas usan el idioma de respaldo)
+return [
+    'required' => 'El campo :attribute es obligatorio.',
+    'required_if' => 'El campo :attribute es obligatorio cuando :other es :value.',
+    'email' => 'El campo :attribute debe ser un correo válido.',
+    'string' => 'El campo :attribute debe ser texto.',
+    'integer' => 'El campo :attribute debe ser un número entero.',
+    'array' => 'El campo :attribute debe ser una lista.',
+    'date' => 'El campo :attribute no es una fecha válida.',
+    'after' => 'El campo :attribute debe ser una fecha posterior a :date.',
+    'before_or_equal' => 'El campo :attribute debe ser una fecha anterior o igual a :date.',
+    'different' => 'Los campos :attribute y :other deben ser distintos.',
+    'exists' => 'El valor seleccionado en :attribute no existe.',
+    'unique' => 'El valor de :attribute ya está registrado.',
+    'in' => 'El valor seleccionado en :attribute no es válido.',
+    'file' => 'El campo :attribute debe ser un archivo.',
+    'max' => [
+        'string' => 'El campo :attribute no puede superar los :max caracteres.',
+        'file' => 'El archivo :attribute no puede superar los :max kilobytes.',
+        'array' => 'El campo :attribute no puede tener más de :max elementos.',
+        'numeric' => 'El campo :attribute no puede ser mayor que :max.',
+    ],
+    'min' => [
+        'string' => 'El campo :attribute debe tener al menos :min caracteres.',
+        'array' => 'El campo :attribute debe tener al menos :min elementos.',
+        'numeric' => 'El campo :attribute debe ser al menos :min.',
+        'file' => 'El archivo :attribute debe pesar al menos :min kilobytes.',
+    ],
+
+    'attributes' => [
+        'name' => 'nombre',
+        'email' => 'correo',
+        'password' => 'contraseña',
+        'titulo' => 'título',
+        'fecha_inscripcion' => 'fecha de inscripción',
+        'fecha_limite' => 'nueva fecha límite',
+        'fecha' => 'fecha',
+        'acceso_hasta' => 'acceso hasta',
+        'archivo' => 'archivo',
+        'documento' => 'documento',
+        'fundamento' => 'fundamento',
+        'texto' => 'texto',
+        'roles' => 'roles',
+        'guia_id' => 'guía',
+        'coguia_id' => 'coguía',
+        'tipo' => 'tipo',
+    ],
+];

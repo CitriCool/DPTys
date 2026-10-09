@@ -1,0 +1,30 @@
+.nav-link {
+    padding: 10px 15px;
+    transition: background-color 0.3s ease;
+}
+
+.nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-link.active {
+    background-color: #007bff;
+}
+
+.nav-treeview {
+    padding-left: 20px;
+}
+
+.nav-treeview .nav-link {
+    padding: 8px 15px;
+}
+
+.right {
+    float: right;
+    transition: transform 0.3s ease;
+}
+
+/* Rotación de la flecha cuando el menú está expandido */
+.menu-open > .nav-link .right {
+    transform: rotate(-90deg);
+}

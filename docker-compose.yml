@@ -1,0 +1,86 @@
+name: dptys
+
+x-app-env: &app-env
+  DPTYS_APP_NAME: DPTyS
+  DPTYS_APP_ENV: local
+  DPTYS_APP_DEBUG: "true"
+  DPTYS_APP_URL: http://localhost:${DPTYS_APP_PORT:-8081}
+  DPTYS_APP_KEY: ${DPTYS_APP_KEY:-}
+  DPTYS_LOG_CHANNEL: stderr
+  DPTYS_DB_CONNECTION: sqlsrv
+  DPTYS_DB_HOST: db
+  DPTYS_DB_PORT: 1433
+  DPTYS_DB_DATABASE: DPTYS
+  DPTYS_DB_USERNAME: sa
+  DPTYS_DB_PASSWORD: ${DPTYS_DB_PASSWORD:-Dptys_Dev_2026!}
+  DPTYS_DB_ENCRYPT: "yes"
+  DPTYS_DB_TRUST_SERVER_CERTIFICATE: "true"
+  DPTYS_MAIL_MAILER: log
+  DPTYS_MAIL_FROM_ADDRESS: no-responder@dptys.local
+  DPTYS_MAIL_FROM_NAME: DPTyS
+  DPTYS_MAIL_LOG_CHANNEL: correos
+  DPTYS_QUEUE_CONNECTION: sync
+  DPTYS_SEED_DEMO: ${DPTYS_SEED_DEMO:-true}
+
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${DPTYS_DB_PASSWORD:-Dptys_Dev_2026!}
+      MSSQL_PID: Developer
+    ports:
+      - "${DPTYS_DB_FORWARD_PORT:-1434}:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+
+  db-init:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      MSSQL_SA_PASSWORD: ${DPTYS_DB_PASSWORD:-Dptys_Dev_2026!}
+      DB_NAME: DPTYS
+    volumes:
+      - ./docker/sqlserver:/scripts:ro
+    entrypoint: ["/bin/bash", "/scripts/init.sh"]
+    restart: "no"
+
+  app:
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+    image: dptys-app
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+    ports:
+      - "${DPTYS_APP_PORT:-8081}:80"
+    volumes:
+      - app-storage:/var/www/html/storage/app
+    environment:
+      <<: *app-env
+      DPTYS_RUN_MIGRATIONS: "true"
+
+  # Tareas programadas: alertas diarias de plazos
+  scheduler:
+    image: dptys-app
+    user: www-data
+    depends_on:
+      - app
+    volumes:
+      - app-storage:/var/www/html/storage/app
+    environment:
+      <<: *app-env
+    command: ["sh", "-c", "sleep 20 && php artisan schedule:work"]
+
+volumes:
+  sqlserver-data:
+  app-storage:

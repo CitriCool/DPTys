@@ -1,0 +1,200 @@
+body{
+  font-family: 'Ubuntu', sans-serif;
+}
+
+.text-largo{
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.form-group {
+  position: relative;
+}
+
+.form-group label {
+  position: absolute;
+  top: -9px;
+  left: 20px;
+  font-size: 11px;
+  background-color: white;
+  padding: 0 5px;
+}
+
+ #letraP {
+  position: absolute;
+  top: -26px;
+  left: -3px;
+  font-size: 15px;
+  background-color: transparent;
+  padding: 0 5px;
+}
+
+.card-title{
+    font-size: 15px;
+    font-weight: bold;
+}
+
+.card-header{
+  color: #fff;
+  background-color: #194979!important;
+}
+
+.form-control{
+  background-color: white!important;
+}
+
+#editarprograma{
+  display: none;
+}
+
+.note-editable[contenteditable="false"] {
+  background-color: #fff!important;
+}
+
+.radio-group {
+  display: flex;
+  align-items: center;
+}
+.radio-label {
+  margin-right: 10px;
+}
+
+.bn{
+  display: block;
+}
+
+.bna, #guardarprograma{
+  display: none;
+}
+.bnr{
+  display: none;
+}
+
+.moveall,
+.removeall {
+  border: 1px solid #ccc !important;
+}
+
+.removeall:hover {
+  background: #efefef;
+}
+
+
+.moveall::after {
+  content: attr(title);
+  
+}
+
+.removeall::after {
+  content: attr(title);
+}
+
+
+.form-control option {
+    padding: 10px;
+    border-bottom: 1px solid #efefef;
+}
+
+.btn-group {
+  /* display: flex!important; */
+  gap: 4px!important; /* Ajusta el valor según el margen que deseas */
+}
+
+#tabladoc th, #tablaresp th, #tablahist th, #tablaCompetencias th,
+#tabladoc td, #tablaresp td, #tablahist td, #tablaCompetencias td {
+  font-family: 'Ubuntu', sans-serif;
+} 
+
+
+.custom-file-label::after {
+  content: 'Buscar'!important; /* Cambia el texto del botón aquí */
+}
+
+/* Estilizar el botón cuando el input[type="file"] está activado */
+.custom-file-label:focus + .custom-file-label::after {
+  content: 'Buscar'; /* Cambia el texto del botón aquí */
+}
+
+.custom-file-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+}
+
+input[type = 'file']:hover{
+  cursor: pointer;
+}
+
+
+
+/* Estilos generales para el grupo de radio buttons en línea horizontal */
+.radio-group-horizontal {
+  display: flex;
+  align-items: center;
+}
+
+/* Estilos para los botones de radio personalizados */
+.custom-radio {
+  display: flex;
+  align-items: center;
+  margin-right: 20px; /* Espacio entre los botones de radio */
+}
+
+/* Estilos para ocultar los radio buttons nativos */
+.custom-radio input[type="radio"] {
+  display: none;
+}
+
+/* Estilos para el botón de radio personalizado */
+.custom-radio label {
+  padding: 4px 10px; /* Espacio alrededor del botón de radio */
+  background-color: #f1f1f1; /* Color de fondo predeterminado */
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+/* Estilos para el botón de radio personalizado cuando está seleccionado */
+.custom-radio input[type="radio"]:checked + label {
+  background-color: #3498db; /* Color de fondo cuando está seleccionado */
+  border-color: #3498db;
+  color: white; /* Color del texto cuando está seleccionado */
+}
+
+.alert {
+  padding: 0.25rem;
+  margin-bottom: 0rem;
+  background-color: #3498db;
+}
+
+#tablaCompetencias tbody tr td:hover{
+  cursor: pointer;
+}
+
+
+#tablaCompetencias tbody tr:hover{
+  background-color: #e2e1e1;
+}
+
+.fila-seleccionada {
+  background-color: #3498db !important; /* Cambia este color al color que desees */
+}
+
+.swal2-styled.swal2-confirm{
+  background-color: #c82333!important;
+}
+
+
+/* Personaliza el estilo de las tablas en Summernote */
+.note-editable table {
+  border: 2px solid #000; /* Define el grosor de las líneas de la tabla */
+  border-collapse: collapse; /* Fusiona las líneas de la tabla */
+}
+
+.note-editable th,
+.note-editable td {
+  border: 1px solid #000; /* Define el grosor de las líneas de las celdas */
+  padding: 8px; /* Espaciado interno de las celdas */
+}
