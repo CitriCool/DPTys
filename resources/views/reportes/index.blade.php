@@ -13,18 +13,18 @@
                 <div class="info-box-content"><span class="info-box-text">Observaciones abiertas</span><span class="info-box-number">{{ $indicadores['observaciones_abiertas'] }}</span></div></div>
         </div>
         <div class="col-md-3 col-6">
-            <div class="info-box"><span class="info-box-icon bg-secondary"><i class="fas fa-user-graduate"></i></span>
-                <div class="info-box-content"><span class="info-box-text">Defensas programadas</span><span class="info-box-number">{{ $indicadores['defensas'] }}</span></div></div>
+            <a href="{{ route('tesis.index', ['estado' => 'defensa_programada']) }}" class="info-box" title="Ver los expedientes"><span class="info-box-icon bg-secondary"><i class="fas fa-user-graduate"></i></span>
+                <div class="info-box-content"><span class="info-box-text">Defensas programadas</span><span class="info-box-number">{{ $indicadores['defensas'] }}</span></div></a>
         </div>
         <div class="col-md-3 col-6">
-            <div class="info-box"><span class="info-box-icon bg-warning"><i class="fas fa-edit"></i></span>
-                <div class="info-box-content"><span class="info-box-text">Pendientes de cierre</span><span class="info-box-number">{{ $indicadores['pendientes_cierre'] }}</span></div></div>
+            <a href="{{ route('tesis.index', ['estado' => 'correcciones_finales']) }}" class="info-box" title="Ver los expedientes"><span class="info-box-icon bg-warning"><i class="fas fa-edit"></i></span>
+                <div class="info-box-content"><span class="info-box-text">Pendientes de cierre</span><span class="info-box-number">{{ $indicadores['pendientes_cierre'] }}</span><span class="info-box-ayuda">En correcciones finales</span></div></a>
         </div>
         <div class="col-md-3 col-6">
             <div class="info-box"><span class="info-box-icon bg-success"><i class="fas fa-file-signature"></i></span>
                 <div class="info-box-content"><span class="info-box-text">Completitud documental</span>
                     <span class="info-box-number">{{ $indicadores['completitud'] !== null ? $indicadores['completitud'] . '%' : '—' }}</span>
-                    <small class="text-muted">hitos vencidos aprobados</small></div></div>
+                    <span class="info-box-ayuda">Hitos con plazo cumplido que están aprobados</span></div></div>
         </div>
     </div>
 
@@ -46,7 +46,7 @@
                             <tr>
                                 <td class="text-start">{{ $fila['cohorte'] }}</td>
                                 @foreach($estados as $e)
-                                    <td>{{ $fila['estados'][$e->codigo] ?: '·' }}</td>
+                                    <td>@if($fila['estados'][$e->codigo])<a href="{{ route('tesis.index', ['cohorte' => $fila['cohorte_id'] ?? null, 'estado' => $e->codigo]) }}">{{ $fila['estados'][$e->codigo] }}</a>@else<span class="text-muted">0</span>@endif</td>
                                 @endforeach
                                 <td class="fw-bold">{{ $fila['estados']->sum() }}</td>
                             </tr>
@@ -62,7 +62,7 @@
             <div class="card">
                 <div class="card-header"><h3 class="card-title">Hitos de tesis en curso</h3></div>
                 <div class="card-body">
-                    @php $etiquetas = ['vencido' => 'Vencidos', 'proximo' => 'Vencen en 30 días', 'en_plazo' => 'En plazo', 'cumplido' => 'Cumplidos']; @endphp
+                    @php $etiquetas = ['vencido' => 'Vencidos', 'en_revision' => 'Entregados, en revisión', 'proximo' => 'Vencen en 30 días', 'en_plazo' => 'En plazo', 'cumplido' => 'Cumplidos']; @endphp
                     <table class="table table-sm mb-0">
                         @foreach($etiquetas as $clave => $etiqueta)
                             <tr>

@@ -53,12 +53,9 @@
                     @endforelse
                 </div>
             </li>
-            <li class="nav-item d-none d-md-block">
-                <span class="nav-link text-muted small">{{ $usuario->name }}</span>
-            </li>
             <li class="nav-item">
                 <form method="POST" action="{{ route('logout') }}">@csrf
-                    <button class="btn btn-link nav-link" title="Cerrar sesión"><i class="fas fa-sign-out-alt"></i></button>
+                    <button class="btn btn-link nav-link" title="Cerrar sesión" aria-label="Cerrar sesión"><i class="fas fa-sign-out-alt me-1"></i><span class="d-none d-md-inline small">Salir</span></button>
                 </form>
             </li>
         </ul>
@@ -74,15 +71,19 @@
         <div class="brand-link px-2 text-center">
             <p class="brand-text text-white mb-0 text-truncate">{{ $usuario->name }}</p>
             <p class="brand-text text-white-50 small mb-2 text-truncate">{{ $usuario->email }}</p>
-            <form method="POST" action="{{ route('rol.cambiar') }}" id="rolForm" class="text-start">
-                @csrf
-                <label for="rolActivo" class="text-white small mb-1">Rol en uso:</label>
-                <select class="form-select form-select-sm" id="rolActivo" name="rol" {{ $rolesUsuario->count() < 2 ? 'disabled' : '' }}>
-                    @foreach($rolesUsuario as $rol)
-                        <option value="{{ $rol }}" @selected($rol === $rolActivo)>{{ \App\Support\Roles::nombre($rol) }}</option>
-                    @endforeach
-                </select>
-            </form>
+            @if($rolesUsuario->count() > 1)
+                <form method="POST" action="{{ route('rol.cambiar') }}" id="rolForm" class="text-start">
+                    @csrf
+                    <label for="rolActivo" class="text-white small mb-1">Trabajando como:</label>
+                    <select class="form-select form-select-sm" id="rolActivo" name="rol" title="Cambiar el rol cambia el menú y las acciones disponibles">
+                        @foreach($rolesUsuario as $rol)
+                            <option value="{{ $rol }}" @selected($rol === $rolActivo)>{{ \App\Support\Roles::nombre($rol) }}</option>
+                        @endforeach
+                    </select>
+                </form>
+            @else
+                <span class="badge bg-light text-dark mb-2">{{ \App\Support\Roles::nombre($rolActivo) }}</span>
+            @endif
         </div>
 
         <div class="sidebar">
@@ -104,6 +105,14 @@
     <!-- Contenido -->
     <div class="content-wrapper">
         <section class="content-header">
+            @hasSection('migas')
+                <nav aria-label="Ruta de navegación" class="container-fluid">
+                    <ol class="breadcrumb small mb-1 p-0 bg-transparent">
+                        <li class="breadcrumb-item"><a href="{{ route('inicio') }}">Inicio</a></li>
+                        @yield('migas')
+                    </ol>
+                </nav>
+            @endif
             <div class="container-fluid d-flex flex-wrap align-items-center justify-content-between gap-2">
                 <h1 class="mb-0">@yield('titulo', 'Inicio')</h1>
                 <div>@yield('acciones')</div>

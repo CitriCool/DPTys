@@ -21,14 +21,26 @@ class InicioController extends Controller
         $visibles = Tesis::visiblesPara($user, $rol);
         $ids = (clone $visibles)->pluck('id');
 
+        // Pendientes: plazo cercano o vencido, más las entregas que esperan revisión
         $pendientes = TesisHito::with('tesis.doctorando')
             ->whereIn('tesis_id', $ids)
             ->where('estado', '!=', 'aprobado')
             ->whereHas('tesis.estadoActual', fn ($q) => $q->where('final', false))
-            ->whereDate('fecha_limite', '<=', now()->addDays(TesisHito::DIAS_ALERTA))
+            ->where(fn ($q) => $q->whereDate('fecha_limite', '<=', now()->addDays(TesisHito::DIAS_ALERTA))
+                ->orWhere('estado', 'entregado'))
             ->orderBy('fecha_limite')
             ->limit(12)
             ->get();
+
+        // Vista propia para doctorando/a: su tesis, su próximo paso y lo que debe responder
+        $miTesis = null;
+        if ($rol === Roles::DOCTORANDO) {
+            $miTesis = Tesis::with(['estadoActual', 'hitos.entregas.versiones', 'observaciones' => fn ($q) => $q->whereNull('parent_id')->where('resuelta', false)->with('hito', 'autor')])
+                ->where('doctorando_id', $user->id)
+                ->whereHas('estadoActual', fn ($q) => $q->where('final', false))
+                ->first()
+                ?? Tesis::with('estadoActual', 'hitos')->where('doctorando_id', $user->id)->latest('id')->first();
+        }
 
         $porEstado = EstadoTesis::orderBy('orden')->get()->map(fn ($e) => [
             'etiqueta' => $e->nombre,
@@ -38,10 +50,11 @@ class InicioController extends Controller
 
         $kpi = [
             'tesis' => $ids->count(),
-            'vencidos' => TesisHito::whereIn('tesis_id', $ids)->where('estado', '!=', 'aprobado')
-                ->whereDate('fecha_limite', '<', now()->toDateString())
+            'vencidos' => TesisHito::whereIn('tesis_id', $ids)->vencidos()
                 ->whereHas('tesis.estadoActual', fn ($q) => $q->where('final', false))->count(),
-            'proximos' => TesisHito::whereIn('tesis_id', $ids)->where('estado', '!=', 'aprobado')
+            'en_revision' => TesisHito::whereIn('tesis_id', $ids)->enRevision()
+                ->whereHas('tesis.estadoActual', fn ($q) => $q->where('final', false))->count(),
+            'proximos' => TesisHito::whereIn('tesis_id', $ids)->whereNotIn('estado', ['aprobado', 'entregado'])
                 ->whereBetween('fecha_limite', [now()->toDateString(), now()->addDays(TesisHito::DIAS_ALERTA)->toDateString()])->count(),
             'observaciones' => Observacion::whereIn('tesis_id', $ids)->whereNull('parent_id')->where('resuelta', false)->count(),
             'defensas' => (clone $visibles)->where('estado', 'defensa_programada')->count(),
@@ -52,7 +65,7 @@ class InicioController extends Controller
             ? Evaluacion::with('tesis', 'hito')->where('evaluador_id', $user->id)->latest()->get()
             : collect();
 
-        return view('inicio', compact('rol', 'pendientes', 'porEstado', 'kpi', 'evaluaciones'));
+        return view('inicio', compact('rol', 'pendientes', 'porEstado', 'kpi', 'evaluaciones', 'miTesis'));
     }
 
     /**

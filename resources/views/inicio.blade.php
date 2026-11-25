@@ -11,55 +11,51 @@
             El rol técnico administra infraestructura, integraciones y auditoría, sin acceso a decisiones académicas.
             Revise la <a href="{{ route('admin.bitacora') }}">bitácora</a> o la <a href="{{ route('api.docs') }}">documentación de la API</a>.
         </div>
+    @elseif($rol === \App\Support\Roles::DOCTORANDO)
+        @include('partials.inicio-doctorando', ['tesis' => $miTesis])
     @else
-        <!-- Indicadores -->
+        @php
+            $tarjetas = [
+                ['Expedientes', $kpi['tesis'], 'bg-info', 'fas fa-folder-open', route('tesis.index'), null],
+                ['Hitos vencidos', $kpi['vencidos'], 'bg-danger', 'fas fa-exclamation-circle', route('tesis.index', ['vencimiento' => 'vencidos']), 'Esperan entrega o corrección'],
+                ['Entregas por revisar', $kpi['en_revision'], 'bg-primary', 'fas fa-inbox', route('tesis.index', ['vencimiento' => 'en_revision']), 'Esperan la revisión de la guía'],
+                ['Vencen en 30 días', $kpi['proximos'], 'bg-warning', 'fas fa-clock', route('tesis.index', ['vencimiento' => 'proximos']), null],
+                ['Observaciones abiertas', $kpi['observaciones'], 'bg-secondary', 'fas fa-comments', null, 'Sin marcar como resueltas'],
+                ['Tiempo de respuesta', $kpi['retroalimentacion'] !== null ? $kpi['retroalimentacion'] . ' días' : '—', 'bg-success', 'fas fa-reply', null, 'Promedio desde la entrega hasta la primera observación'],
+            ];
+        @endphp
         <div class="row kpi">
-            <div class="col-lg-2 col-md-4 col-6">
-                <div class="info-box"><span class="info-box-icon bg-info"><i class="fas fa-folder-open"></i></span>
-                    <div class="info-box-content"><span class="info-box-text">Expedientes</span><span class="info-box-number">{{ $kpi['tesis'] }}</span></div></div>
-            </div>
-            <div class="col-lg-2 col-md-4 col-6">
-                <div class="info-box"><span class="info-box-icon bg-danger"><i class="fas fa-exclamation-circle"></i></span>
-                    <div class="info-box-content"><span class="info-box-text">Hitos vencidos</span><span class="info-box-number">{{ $kpi['vencidos'] }}</span></div></div>
-            </div>
-            <div class="col-lg-2 col-md-4 col-6">
-                <div class="info-box"><span class="info-box-icon bg-warning"><i class="fas fa-clock"></i></span>
-                    <div class="info-box-content"><span class="info-box-text">Próximos 30 días</span><span class="info-box-number">{{ $kpi['proximos'] }}</span></div></div>
-            </div>
-            <div class="col-lg-2 col-md-4 col-6">
-                <div class="info-box"><span class="info-box-icon bg-primary"><i class="fas fa-comments"></i></span>
-                    <div class="info-box-content"><span class="info-box-text">Observaciones abiertas</span><span class="info-box-number">{{ $kpi['observaciones'] }}</span></div></div>
-            </div>
-            <div class="col-lg-2 col-md-4 col-6">
-                <div class="info-box"><span class="info-box-icon bg-secondary"><i class="fas fa-user-graduate"></i></span>
-                    <div class="info-box-content"><span class="info-box-text">Defensas programadas</span><span class="info-box-number">{{ $kpi['defensas'] }}</span></div></div>
-            </div>
-            <div class="col-lg-2 col-md-4 col-6">
-                <div class="info-box"><span class="info-box-icon bg-success"><i class="fas fa-reply"></i></span>
-                    <div class="info-box-content"><span class="info-box-text">Retroalimentación</span>
-                        <span class="info-box-number">{{ $kpi['retroalimentacion'] !== null ? $kpi['retroalimentacion'] . ' días' : '—' }}</span></div></div>
-            </div>
+            @foreach($tarjetas as [$etiqueta, $valor, $color, $icono, $enlace, $ayuda])
+                <div class="col-xxl-2 col-lg-4 col-sm-6">
+                    @php $contenido = view('partials.kpi', compact('etiqueta', 'valor', 'color', 'icono', 'ayuda'))->render(); @endphp
+                    @if($enlace)
+                        <a href="{{ $enlace }}" class="info-box" title="Ver los expedientes">{!! $contenido !!}</a>
+                    @else
+                        <div class="info-box">{!! $contenido !!}</div>
+                    @endif
+                </div>
+            @endforeach
         </div>
 
         <div class="row">
             <!-- Semáforo de pendientes -->
             <div class="col-xl-8">
                 <div class="card">
-                    <div class="card-header"><h3 class="card-title"><i class="fas fa-traffic-light me-2"></i>Pendientes con plazo cercano o vencido</h3></div>
+                    <div class="card-header"><h3 class="card-title"><i class="fas fa-traffic-light me-2"></i>Pendientes: plazos cercanos, vencidos y entregas por revisar</h3></div>
                     <div class="card-body table-responsive p-0">
                         <table class="table table-hover mb-0">
-                            <thead><tr><th>Expediente</th><th>Hito</th><th>Fecha límite</th><th>Estado</th><th>Semáforo</th></tr></thead>
+                            <thead><tr><th>Expediente</th><th>Hito</th><th>Fecha límite</th><th>Situación</th><th>Le toca a</th></tr></thead>
                             <tbody>
                             @forelse($pendientes as $hito)
                                 <tr>
                                     <td>
-                                        <a href="{{ route('tesis.show', $hito->tesis) }}#hito-{{ $hito->id }}">{{ $hito->tesis->codigo }}</a>
+                                        <a href="{{ route('tesis.show', $hito->tesis) }}#hito-{{ $hito->id }}" class="text-nowrap">{{ $hito->tesis->codigo }}</a>
                                         <small class="d-block text-muted">{{ $hito->tesis->doctorando->name }}</small>
                                     </td>
                                     <td>{{ $hito->nombre }}</td>
                                     <td class="text-nowrap">{{ $hito->fecha_limite->format('d/m/Y') }}</td>
-                                    <td>{{ $hito->estado_nombre }}</td>
-                                    <td>@include('partials.semaforo', ['hito' => $hito])</td>
+                                    <td>@include('partials.semaforo', ['hito' => $hito])<small class="d-block text-muted">{{ $hito->estado_nombre }}</small></td>
+                                    <td class="small">{{ $hito->turno === 'guia' ? 'Guía' : 'Doctorando/a' }}</td>
                                 </tr>
                             @empty
                                 <tr><td colspan="5" class="text-center text-muted py-4"><i class="fas fa-check-circle text-success me-1"></i>No hay pendientes en los próximos 30 días.</td></tr>
@@ -67,6 +63,7 @@
                             </tbody>
                         </table>
                     </div>
+                    <div class="card-footer bg-white">@include('partials.leyenda-semaforo')</div>
                 </div>
 
                 @if($rol === \App\Support\Roles::EVALUADOR)
@@ -116,7 +113,7 @@
 @endsection
 
 @push('scripts')
-    @if($kpi['tesis'] ?? false)
+    @if(($kpi['tesis'] ?? false) && $rol !== \App\Support\Roles::DOCTORANDO && $rol !== \App\Support\Roles::TECNICO)
         <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
         <script>
             document.addEventListener('DOMContentLoaded', function () {

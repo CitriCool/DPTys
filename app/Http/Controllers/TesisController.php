@@ -46,9 +46,9 @@ class TesisController extends Controller
     private function consultaFiltrada(Request $request): Builder
     {
         $consulta = Tesis::visiblesPara(auth()->user(), RolActivo::get())
-            ->with(['programa', 'cohorte', 'doctorando', 'estadoActual', 'responsablesVigentes'])
-            ->withCount(['hitos as hitos_vencidos' => fn ($q) => $q->where('estado', '!=', 'aprobado')
-                ->whereDate('fecha_limite', '<', now()->toDateString())]);
+            ->with(['programa', 'cohorte', 'doctorando', 'estadoActual', 'responsablesVigentes',
+                'hitos' => fn ($q) => $q->where('estado', '!=', 'aprobado')])
+            ->withCount(['hitos as hitos_vencidos' => fn ($q) => $q->vencidos()]);
 
         $consulta->when($request->query('programa'), fn ($q, $v) => $q->where('programa_id', $v))
             ->when($request->query('cohorte'), fn ($q, $v) => $q->where('cohorte_id', $v))
@@ -60,15 +60,22 @@ class TesisController extends Controller
 
         switch ($request->query('vencimiento')) {
             case 'vencidos':
-                $consulta->whereHas('hitos', fn ($q) => $q->where('estado', '!=', 'aprobado')->whereDate('fecha_limite', '<', now()->toDateString()));
+                $consulta->whereHas('hitos', fn ($q) => $q->vencidos());
+                break;
+            case 'en_revision':
+                $consulta->whereHas('hitos', fn ($q) => $q->enRevision());
                 break;
             case 'proximos':
-                $consulta->whereHas('hitos', fn ($q) => $q->where('estado', '!=', 'aprobado')
+                $consulta->whereHas('hitos', fn ($q) => $q->whereNotIn('estado', ['aprobado', 'entregado'])
                     ->whereBetween('fecha_limite', [now()->toDateString(), now()->addDays(TesisHito::DIAS_ALERTA)->toDateString()]));
                 break;
         }
 
-        return $consulta->orderBy('codigo');
+        return match ($request->query('orden')) {
+            'vencidos' => $consulta->orderByDesc('hitos_vencidos')->orderBy('codigo'),
+            'codigo_desc' => $consulta->orderByDesc('codigo'),
+            default => $consulta->orderBy('codigo'),
+        };
     }
 
     private function exportarCsv($tesis)

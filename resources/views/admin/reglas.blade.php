@@ -3,6 +3,7 @@
 @section('titulo', 'Reglas y programas')
 
 @section('contenido')
+    @php $nombreEstado = \App\Models\EstadoTesis::pluck('nombre', 'codigo'); @endphp
     <p class="text-muted">
         La normativa de cada programa se traduce en una <strong>versión de reglas</strong>: hitos con plazos y transiciones de estado
         permitidas por rol. Cada cohorte usa una versión, de modo que un cambio de reglamento no altera los expedientes ya iniciados.
@@ -48,7 +49,7 @@
                                 <tbody>
                                 @foreach($regla->transiciones->sortBy('estado_desde') as $t)
                                     <tr class="small">
-                                        <td class="text-nowrap">{{ $t->estado_desde }} → {{ $t->estado_hacia }}</td>
+                                        <td class="text-nowrap">{{ $nombreEstado[$t->estado_desde] ?? $t->estado_desde }} → {{ $nombreEstado[$t->estado_hacia] ?? $t->estado_hacia }}</td>
                                         <td>{{ \App\Support\Roles::nombre($t->rol) }}</td>
                                         <td>{{ $t->accion }} @if($t->requiere_documento)<i class="fas fa-paperclip text-muted" title="Requiere documento"></i>@endif</td>
                                     </tr>

@@ -12,7 +12,7 @@
 @endif
 
 @if (session('exito'))
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
+    <div class="alert alert-success alert-dismissible fade show alerta-flotante shadow" role="status" aria-live="polite">
         <i class="fas fa-check-circle me-1"></i>{{ session('exito') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
     </div>
