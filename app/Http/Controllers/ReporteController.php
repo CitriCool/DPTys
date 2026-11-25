@@ -28,6 +28,7 @@ class ReporteController extends Controller
         $cohortes = Cohorte::with('programa')->whereIn('id', (clone $visibles)->select('cohorte_id'))->orderBy('anio')->get();
         $matriz = $cohortes->map(fn ($c) => [
             'cohorte' => "{$c->programa->sigla} {$c->anio}",
+            'cohorte_id' => $c->id,
             'estados' => $estados->mapWithKeys(fn ($e) => [
                 $e->codigo => (clone $visibles)->where('cohorte_id', $c->id)->where('estado', $e->codigo)->count(),
             ]),

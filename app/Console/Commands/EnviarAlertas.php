@@ -37,13 +37,18 @@ class EnviarAlertas extends Command
 
             $tesis = $hito->tesis;
             $vencido = $hito->semaforo === 'vencido';
+            $enRevision = $hito->semaforo === 'en_revision';
             $dias = now()->startOfDay()->diffInDays($hito->fecha_limite, false);
-            $mensaje = $vencido
-                ? "«{$hito->nombre}» está vencido desde el {$hito->fecha_limite->format('d/m/Y')}."
-                : "«{$hito->nombre}» vence en $dias día(s) ({$hito->fecha_limite->format('d/m/Y')}).";
+            $mensaje = match (true) {
+                $enRevision => "«{$hito->nombre}» tiene una entrega esperando revisión.",
+                $vencido => "«{$hito->nombre}» está vencido desde el {$hito->fecha_limite->format('d/m/Y')}.",
+                default => "«{$hito->nombre}» vence en $dias día(s) ({$hito->fecha_limite->format('d/m/Y')}).",
+            };
 
-            // Vencidos también se informan a dirección y secretaría del programa
-            $destinatarios = collect([$tesis->doctorando])->merge(Avisos::guias($tesis));
+            // Una entrega en revisión solo se recuerda a la guía; los vencidos también a dirección y secretaría
+            $destinatarios = $enRevision
+                ? collect(Avisos::guias($tesis))
+                : collect([$tesis->doctorando])->merge(Avisos::guias($tesis));
             if ($vencido) {
                 $destinatarios = $destinatarios->merge(Avisos::gestion($tesis));
             }

@@ -61,6 +61,7 @@ Route::middleware(['auth', VerificarAcceso::class])->group(function () {
     Route::get('/administracion/reglas', [AdminController::class, 'reglas'])->name('admin.reglas');
     Route::get('/administracion/usuarios', [AdminController::class, 'usuarios'])->name('admin.usuarios');
     Route::post('/administracion/usuarios', [AdminController::class, 'guardarUsuario'])->name('admin.usuarios.guardar');
+    Route::post('/administracion/usuarios/{user}', [AdminController::class, 'actualizarUsuario'])->name('admin.usuarios.actualizar');
     Route::post('/administracion/usuarios/{user}/activo', [AdminController::class, 'activarUsuario'])->name('admin.usuarios.activo');
     Route::get('/administracion/bitacora', [AdminController::class, 'bitacora'])->name('admin.bitacora');
 

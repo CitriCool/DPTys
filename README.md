@@ -18,7 +18,7 @@ Versión editable: `docs/modelo-datos.mmd` (Mermaid). Para regenerar la imagen: 
 docker compose up -d --build
 ```
 
-Aplicación: http://localhost:8081 · SQL Server: puerto 1434 (no choca con SGQA en 8080/1433).
+Aplicación: http://localhost:8082 · SQL Server: puerto 1435 (copia de trabajo UX; convive con el original en 8081/1434 y con SGQA en 8080/1433).
 Las migraciones y los datos de prueba se cargan solos al arrancar.
 
 Cuentas de prueba (ficticias), contraseña `dptys2026`: `direccion@dptys.local` (dirección y guía),

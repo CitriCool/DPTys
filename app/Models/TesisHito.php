@@ -41,12 +41,33 @@ class TesisHito extends Model
     }
 
     /**
-     * Semáforo del hito: cumplido, vencido, próximo o en plazo.
+     * Hitos con plazo vencido que siguen esperando una entrega o corrección del doctorando/a.
+     * Un hito entregado y en espera de revisión no cuenta como vencido: se informa aparte.
+     */
+    public function scopeVencidos($q)
+    {
+        return $q->whereNotIn('estado', ['aprobado', 'entregado'])
+            ->whereDate('fecha_limite', '<', now()->toDateString());
+    }
+
+    /**
+     * Hitos con una entrega que espera la revisión de la guía.
+     */
+    public function scopeEnRevision($q)
+    {
+        return $q->where('estado', 'entregado');
+    }
+
+    /**
+     * Semáforo del hito: cumplido, en revisión, vencido, próximo o en plazo.
      */
     public function getSemaforoAttribute(): string
     {
         if ($this->estado === 'aprobado') {
             return 'cumplido';
+        }
+        if ($this->estado === 'entregado') {
+            return 'en_revision';
         }
         if ($this->fecha_limite->isPast() && !$this->fecha_limite->isToday()) {
             return 'vencido';
@@ -55,6 +76,18 @@ class TesisHito extends Model
             return 'proximo';
         }
         return 'en_plazo';
+    }
+
+    /**
+     * Quién debe dar el siguiente paso: 'doctorando', 'guia' o null si el hito está cumplido.
+     */
+    public function getTurnoAttribute(): ?string
+    {
+        return match ($this->estado) {
+            'aprobado' => null,
+            'entregado' => 'guia',
+            default => 'doctorando',
+        };
     }
 
     public function getEstadoNombreAttribute(): string

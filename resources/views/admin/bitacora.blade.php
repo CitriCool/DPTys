@@ -32,7 +32,7 @@
 
     <div class="card">
         <div class="card-body table-responsive p-0">
-            <table class="table table-sm table-hover mb-0">
+            <table class="table table-sm table-hover mb-0 tabla-tarjetas">
                 <thead><tr><th>#</th><th>Fecha</th><th>Acción</th><th>Persona / rol</th><th>Entidad</th><th>IP</th><th>Huella</th></tr></thead>
                 <tbody>
                 @foreach($eventos as $e)
@@ -40,13 +40,16 @@
                         <td>{{ $e->id }}</td>
                         <td class="text-nowrap">{{ $e->created_at->format('d/m/Y H:i:s') }}</td>
                         <td>{{ str_replace('_', ' ', $e->accion) }}</td>
-                        <td>{{ $e->autor?->name ?? 'Sistema' }}<br><span class="text-muted">{{ \App\Support\Roles::nombre($e->rol_ejercido) }}</span></td>
+                        <td>@include('partials.persona', ['nombre' => $e->autor?->name ?? 'Sistema', 'detalle' => \App\Support\Roles::nombre($e->rol_ejercido), 'tam' => 'xs'])</td>
                         <td>{{ $e->entidad_tipo }}#{{ $e->entidad_id }}
                             @if($e->tesis_id)<a href="{{ route('tesis.show', $e->tesis_id) }}" class="d-block">expediente</a>@endif</td>
                         <td>{{ $e->ip }}</td>
                         <td><span class="hash" title="Anterior: {{ $e->hash_anterior }}">{{ substr($e->hash, 0, 16) }}…</span></td>
                     </tr>
                 @endforeach
+                @if($eventos->isEmpty())
+                    <tr><td colspan="7">@include('partials.vacio', ['dibujo' => 'documento', 'titulo' => 'No hay eventos para este filtro', 'texto' => 'Elija otra acción o vuelva a ver todos los eventos.', 'accion' => route('admin.bitacora'), 'accionTexto' => 'Ver todos'])</td></tr>
+                @endif
                 </tbody>
             </table>
         </div>

@@ -2,10 +2,15 @@
 
 @section('titulo', 'Nuevo expediente de tesis')
 
+@section('migas')
+    <li class="breadcrumb-item"><a href="{{ route('tesis.index') }}">Expedientes de tesis</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Nuevo</li>
+@endsection
+
 @section('contenido')
     <div class="row">
         <div class="col-xl-8">
-            <form method="POST" action="{{ route('tesis.store') }}" class="card" novalidate>
+            <form method="POST" action="{{ route('tesis.store') }}" class="card" id="formNuevo" novalidate>
                 @csrf
                 <div class="card-header"><h3 class="card-title">Apertura e inscripción</h3></div>
                 <div class="card-body">
@@ -98,6 +103,15 @@
 
 @push('scripts')
 <script>
+    // Avisar si se sale de la página con datos sin guardar
+    (function () {
+        const form = document.getElementById('formNuevo');
+        let modificado = false, enviando = false;
+        form.addEventListener('input', () => modificado = true);
+        form.addEventListener('submit', () => enviando = true);
+        window.addEventListener('beforeunload', e => { if (modificado && !enviando) { e.preventDefault(); e.returnValue = ''; } });
+    })();
+
     document.getElementById('cohorte_id').addEventListener('change', function () {
         const regla = this.selectedOptions[0]?.dataset.regla;
         document.getElementById('reglaAplicable').textContent = regla

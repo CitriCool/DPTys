@@ -17,6 +17,9 @@
                 <p class="text-muted small mb-0">Módulo de tesis</p>
             </div>
 
+            @if (session('exito'))
+                <div class="alert alert-success py-2 small" role="status"><i class="fas fa-check-circle me-1"></i>{{ session('exito') }}</div>
+            @endif
             @if ($errors->any())
                 <div class="alert alert-danger py-2 small" role="alert">{{ $errors->first() }}</div>
             @endif
