@@ -11,7 +11,11 @@
 
 @section('contenido')
     <!-- Filtros -->
-    <form method="GET" class="card card-body mb-3">
+    @php $hayFiltros = collect(request()->except(['page', 'orden']))->filter()->isNotEmpty(); @endphp
+    <button class="btn btn-outline-secondary btn-sm w-100 mb-2 d-md-none" type="button" data-bs-toggle="collapse" data-bs-target="#formFiltros" aria-expanded="{{ $hayFiltros ? 'true' : 'false' }}" aria-controls="formFiltros">
+        <i class="fas fa-filter me-1"></i>Filtros{{ $hayFiltros ? ' (activos)' : '' }} · {{ $tesis->total() }} {{ $tesis->total() === 1 ? 'expediente' : 'expedientes' }}
+    </button>
+    <form method="GET" class="card card-body mb-3 collapse d-md-block {{ $hayFiltros ? 'show' : '' }}" id="formFiltros">
         <div class="row g-2 align-items-end">
             <div class="col-lg-3 col-md-6">
                 <label class="form-label small mb-1" for="buscar">Buscar</label>
@@ -65,9 +69,17 @@
         </div>
     </form>
 
-    <div class="card">
+    <div class="card cargando-contenedor" data-cargando-con="#formFiltros">
+        <div class="esqueleto-capa" aria-hidden="true">
+            @for($i = 0; $i < 4; $i++)
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="esqueleto esqueleto-circulo" style="width:30px;height:30px"></div>
+                    <div class="flex-grow-1"><div class="esqueleto esqueleto-linea" style="width:{{ 70 - $i * 8 }}%"></div><div class="esqueleto esqueleto-linea" style="width:40%"></div></div>
+                </div>
+            @endfor
+        </div>
         <div class="card-body table-responsive p-0">
-            <table class="table table-hover mb-0">
+            <table class="table table-hover mb-0 tabla-tarjetas">
                 <thead>
                     @php
                         $ordenCodigo = request('orden') === 'codigo_desc' ? null : 'codigo_desc';
@@ -83,12 +95,15 @@
                 @forelse($tesis as $t)
                     <tr>
                         <td class="text-nowrap"><a href="{{ route('tesis.show', $t) }}" class="fw-bold">{{ $t->codigo }}</a></td>
-                        <td>
-                            {{ \Illuminate\Support\Str::limit($t->titulo, 90) }}
-                            <small class="d-block text-muted">{{ $t->doctorando->name }}</small>
+                        <td class="td-principal">
+                            <span class="d-block mb-1">{{ \Illuminate\Support\Str::limit($t->titulo, 90) }}</span>
+                            @include('partials.persona', ['nombre' => $t->doctorando->name, 'tam' => 'xs'])
                         </td>
                         <td class="text-nowrap">{{ $t->programa->sigla }} · {{ $t->cohorte->anio }}</td>
-                        <td>{{ $t->responsablesVigentes->firstWhere('tipo', 'guia')?->user->name ?? '—' }}</td>
+                        <td>
+                            @php $guiaT = $t->responsablesVigentes->firstWhere('tipo', 'guia')?->user; @endphp
+                            @if($guiaT)@include('partials.persona', ['nombre' => $guiaT->name, 'tam' => 'xs'])@else — @endif
+                        </td>
                         <td>@include('partials.estado', ['estado' => $t->estadoActual])</td>
                         <td class="small">
                             @php $prox = $t->estadoActual->final ? null : $t->hitos->sortBy('fecha_limite')->first(); @endphp
@@ -108,7 +123,13 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="7" class="text-center text-muted py-4">No hay expedientes que coincidan con los filtros. <a href="{{ route('tesis.index') }}">Quitar filtros</a></td></tr>
+                    <tr><td colspan="7">
+                        @if(collect(request()->except(['page', 'orden']))->filter()->isNotEmpty())
+                            @include('partials.vacio', ['dibujo' => 'lupa', 'titulo' => 'Ningún expediente coincide con los filtros', 'texto' => 'Pruebe con otro estado o cohorte, o quite los filtros para ver todos.', 'accion' => route('tesis.index'), 'accionTexto' => 'Quitar filtros'])
+                        @else
+                            @include('partials.vacio', ['dibujo' => 'carpeta', 'titulo' => 'Aún no hay expedientes', 'texto' => 'Cuando se abra el primer expediente de tesis aparecerá aquí.', 'accion' => \App\Support\Permisos::crearExpedientes() ? route('tesis.create') : null, 'accionTexto' => 'Abrir expediente'])
+                        @endif
+                    </td></tr>
                 @endforelse
                 </tbody>
             </table>

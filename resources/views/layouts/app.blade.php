@@ -12,9 +12,20 @@
     <link rel="stylesheet" href="{{ asset_v('css/style.css') }}">
     <link rel="stylesheet" href="{{ asset_v('css/sidebar.css') }}">
     <link rel="stylesheet" href="{{ asset_v('css/dptys.css') }}">
+    <link rel="stylesheet" href="{{ asset_v('css/dptys-visual.css') }}">
     @stack('estilos')
 </head>
 <body class="sidebar-mini layout-fixed">
+<script>
+    // Aplicar el tema antes de pintar la página (evita el destello claro)
+    (function () {
+        let tema = null;
+        try { tema = localStorage.getItem('dptys-tema'); } catch (e) {}
+        if (tema === 'oscuro' || (!tema && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.body.classList.add('modo-oscuro');
+        }
+    })();
+</script>
 <div class="wrapper">
 
     <!-- Barra superior -->
@@ -25,6 +36,12 @@
             </li>
         </ul>
         <ul class="navbar-nav ms-auto align-items-center">
+            <!-- Modo oscuro -->
+            <li class="nav-item">
+                <button type="button" class="btn btn-link nav-link boton-tema" id="botonTema" aria-label="Cambiar entre modo claro y oscuro" title="Cambiar entre modo claro y oscuro">
+                    <i class="fas fa-moon"></i><i class="fas fa-sun"></i>
+                </button>
+            </li>
             <!-- Avisos -->
             <li class="nav-item dropdown">
                 <a class="nav-link position-relative" data-bs-toggle="dropdown" href="#" aria-label="Avisos">
@@ -68,7 +85,8 @@
             <span class="brand-text fw-bold text-white">DPTyS</span>
         </a>
 
-        <div class="brand-link px-2 text-center">
+        <div class="brand-link px-2 text-center sidebar-usuario">
+            <div class="mb-1">@include('partials.avatar', ['nombre' => $usuario->name, 'tam' => 'md'])</div>
             <p class="brand-text text-white mb-0 text-truncate">{{ $usuario->name }}</p>
             <p class="brand-text text-white-50 small mb-2 text-truncate">{{ $usuario->email }}</p>
             @if($rolesUsuario->count() > 1)
@@ -136,6 +154,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 <script src="{{ asset('js/adminlte.min.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<div class="toast-contenedor" id="toasts" aria-live="polite" aria-atomic="false"></div>
 <script src="{{ asset_v('js/app.js') }}"></script>
 @stack('scripts')
 </body>

@@ -61,11 +61,41 @@ class InicioController extends Controller
             'retroalimentacion' => $this->diasRetroalimentacion($ids->all()),
         ];
 
+        // Gráficos de la dirección: avance por expediente, anillos globales y barras por cohorte
+        $tesisVisibles = Tesis::with('hitos', 'doctorando', 'estadoActual', 'cohorte.programa')->whereIn('id', $ids)->get();
+        $avance = $tesisVisibles
+            ->filter(fn ($t) => !$t->estadoActual->final && $t->hitos->count())
+            ->map(fn ($t) => [
+                'tesis' => $t,
+                'pct' => round($t->hitos->where('estado', 'aprobado')->count() * 100 / $t->hitos->count()),
+                'cumplidos' => $t->hitos->where('estado', 'aprobado')->count(),
+                'total' => $t->hitos->count(),
+            ])->sortBy('pct')->values();
+
+        $hitosTodos = $tesisVisibles->filter(fn ($t) => !$t->estadoActual->final)->flatMap->hitos;
+        $abiertos = $hitosTodos->where('estado', '!=', 'aprobado');
+        $obsTotal = Observacion::whereIn('tesis_id', $ids)->whereNull('parent_id')->count();
+        $anillos = [
+            ['Hitos cumplidos', $hitosTodos->count() ? $hitosTodos->where('estado', 'aprobado')->count() * 100 / $hitosTodos->count() : 0, '#16a34a'],
+            ['Pendientes sin atraso', $abiertos->count() ? $abiertos->where('semaforo', '!=', 'vencido')->count() * 100 / $abiertos->count() : 100, '#2563eb'],
+            ['Observaciones resueltas', $obsTotal ? ($obsTotal - $kpi['observaciones']) * 100 / $obsTotal : 100, '#9333ea'],
+        ];
+
+        $estadosLista = EstadoTesis::orderBy('orden')->get();
+        $porCohorte = [
+            'etiquetas' => $tesisVisibles->groupBy('cohorte_id')->map(fn ($g) => $g->first()->cohorte->programa->sigla . ' ' . $g->first()->cohorte->anio)->values(),
+            'series' => $estadosLista->map(fn ($e) => [
+                'label' => $e->nombre,
+                'backgroundColor' => $e->color,
+                'data' => $tesisVisibles->groupBy('cohorte_id')->map(fn ($g) => $g->where('estado', $e->codigo)->count())->values(),
+            ])->filter(fn ($serie) => collect($serie['data'])->sum() > 0)->values(),
+        ];
+
         $evaluaciones = $rol === Roles::EVALUADOR
             ? Evaluacion::with('tesis', 'hito')->where('evaluador_id', $user->id)->latest()->get()
             : collect();
 
-        return view('inicio', compact('rol', 'pendientes', 'porEstado', 'kpi', 'evaluaciones', 'miTesis'));
+        return view('inicio', compact('rol', 'pendientes', 'porEstado', 'kpi', 'evaluaciones', 'miTesis', 'avance', 'anillos', 'porCohorte'));
     }
 
     /**

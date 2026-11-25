@@ -51,7 +51,7 @@
                                 <td class="fw-bold">{{ $fila['estados']->sum() }}</td>
                             </tr>
                         @empty
-                            <tr><td colspan="{{ $estados->count() + 2 }}" class="text-muted">Sin datos.</td></tr>
+                            <tr><td colspan="{{ $estados->count() + 2 }}">@include('partials.vacio', ['dibujo' => 'documento', 'titulo' => 'Sin datos para mostrar', 'texto' => 'Los reportes se llenan a medida que se abren expedientes.'])</td></tr>
                         @endforelse
                         </tbody>
                     </table>

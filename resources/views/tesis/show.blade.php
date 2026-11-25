@@ -42,15 +42,15 @@
         <div class="card-body">
             <div class="d-flex flex-wrap justify-content-between gap-2">
                 <div>
-                    <h2 class="h5 mb-1">{{ $tesis->titulo }}</h2>
-                    <p class="text-muted mb-0">{{ $tesis->doctorando->name }} · {{ $tesis->programa->nombre }} · {{ $tesis->cohorte->nombre }}</p>
+                    <h2 class="h5 mb-2">{{ $tesis->titulo }}</h2>
+                    @include('partials.persona', ['nombre' => $tesis->doctorando->name, 'detalle' => $tesis->programa->nombre . ' · ' . $tesis->cohorte->nombre, 'tam' => 'md'])
                 </div>
                 <div class="text-end">@include('partials.estado', ['estado' => $tesis->estadoActual])</div>
             </div>
             <hr>
             <div class="row small ficha-datos">
-                <div class="col-6 col-md-3 mb-2"><span class="text-muted d-block">Guía</span>{{ $guia?->user->name ?? '—' }}</div>
-                <div class="col-6 col-md-3 mb-2"><span class="text-muted d-block">Coguía</span>{{ $coguia?->user->name ?? '—' }}</div>
+                <div class="col-6 col-md-3 mb-2"><span class="text-muted d-block mb-1">Guía</span>@if($guia)@include('partials.persona', ['nombre' => $guia->user->name, 'tam' => 'xs'])@else — @endif</div>
+                <div class="col-6 col-md-3 mb-2"><span class="text-muted d-block mb-1">Coguía</span>@if($coguia)@include('partials.persona', ['nombre' => $coguia->user->name, 'tam' => 'xs'])@else — @endif</div>
                 <div class="col-6 col-md-2 mb-2"><span class="text-muted d-block">Inscripción</span>{{ $tesis->fecha_inscripcion->format('d/m/Y') }}</div>
                 <div class="col-6 col-md-2 mb-2"><span class="text-muted d-block">Resolución</span>{{ $tesis->resolucion ?? '—' }}</div>
                 <div class="col-6 col-md-2 mb-2"><span class="text-muted d-block">Reglas</span>{{ $tesis->reglaVersion->nombre }} v{{ $tesis->reglaVersion->version }}</div>
@@ -115,6 +115,9 @@
     <div class="tab-content card card-body border-top-0 rounded-0 rounded-bottom">
         <!-- ============ HITOS ============ -->
         <div class="tab-pane fade show active" id="tab-hitos">
+            @if($hitosVisibles->isNotEmpty())
+                <div class="mb-3">@include('partials.linea-tiempo', ['hitos' => $hitosVisibles])</div>
+            @endif
             <div class="mb-3">@include('partials.leyenda-semaforo')</div>
             <ul class="timeline-hitos">
                 @forelse($hitosVisibles as $hito)
@@ -219,7 +222,7 @@
                         @if($plegado)</details>@endif
                     </li>
                 @empty
-                    <li class="text-muted">No hay hitos visibles para su rol.</li>
+                    <li class="border-0 p-0">@include('partials.vacio', ['dibujo' => 'documento', 'titulo' => 'No hay hitos visibles para su rol', 'texto' => 'Solo se muestran los hitos de las versiones que se le asignaron.'])</li>
                 @endforelse
             </ul>
         </div>
@@ -253,7 +256,7 @@
                 <div class="mb-3" id="observacion-{{ $obs->id }}">
                     <div class="observacion {{ $obs->resuelta ? 'resuelta' : '' }}">
                         <div class="d-flex justify-content-between small">
-                            <strong>{{ $obs->autor->name }} <span class="text-muted fw-normal">· {{ Roles::nombre($obs->rol_ejercido) }}</span></strong>
+                            @include('partials.persona', ['nombre' => $obs->autor->name, 'detalle' => Roles::nombre($obs->rol_ejercido), 'tam' => 'sm'])
                             <span class="text-muted">{{ $obs->created_at->format('d/m/Y H:i') }}</span>
                         </div>
                         @if($obs->hito)<div class="small text-muted">{{ $obs->hito->nombre }}@if($obs->version) · v{{ $obs->version->numero }}@endif</div>@endif
@@ -272,7 +275,7 @@
                     @foreach($obs->respuestas as $resp)
                         <div class="observacion respuesta mt-1">
                             <div class="d-flex justify-content-between small">
-                                <strong>{{ $resp->autor->name }} <span class="text-muted fw-normal">· {{ Roles::nombre($resp->rol_ejercido) }}</span></strong>
+                                @include('partials.persona', ['nombre' => $resp->autor->name, 'detalle' => Roles::nombre($resp->rol_ejercido), 'tam' => 'xs'])
                                 <span class="text-muted">{{ $resp->created_at->format('d/m/Y H:i') }}</span>
                             </div>
                             <p class="mb-0 mt-1">{{ $resp->texto }}</p>
@@ -290,19 +293,19 @@
                     @endif
                 </div>
             @empty
-                <p class="text-muted mb-0">Sin observaciones.</p>
+                @include('partials.vacio', ['dibujo' => 'conversacion', 'titulo' => 'Aún no hay observaciones', 'texto' => $permisos['observar'] ? 'Escriba la primera arriba. Puede asociarla a un hito o dejarla como observación general.' : 'Cuando la guía o el comité comenten la tesis, las observaciones aparecerán aquí.'])
             @endforelse
         </div>
 
         <!-- ============ EVALUACIONES ============ -->
         <div class="tab-pane fade" id="tab-evaluaciones">
             @php $evaluaciones = $esEvaluador ? $tesis->evaluaciones->where('evaluador_id', auth()->id()) : $tesis->evaluaciones; @endphp
-            <table class="table table-sm">
+            <table class="table table-sm tabla-tarjetas">
                 <thead><tr><th>Evaluador/a</th><th>Hito / versión</th><th>Acceso hasta</th><th>Dictamen</th></tr></thead>
                 <tbody>
                 @forelse($evaluaciones as $ev)
                     <tr>
-                        <td>{{ $ev->evaluador->name }}</td>
+                        <td class="td-principal">@include('partials.persona', ['nombre' => $ev->evaluador->name])</td>
                         <td>{{ $ev->hito?->nombre }} @if($ev->version) · v{{ $ev->version->numero }}@endif</td>
                         <td>{{ $ev->acceso_hasta->format('d/m/Y') }} @unless($ev->vigente)<span class="badge bg-secondary">Expirado</span>@endunless</td>
                         <td>
@@ -316,7 +319,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="4" class="text-muted">Sin evaluaciones asignadas.</td></tr>
+                    <tr><td colspan="4">@include('partials.vacio', ['dibujo' => 'documento', 'titulo' => 'Sin evaluaciones asignadas', 'texto' => $permisos['gestionar'] ? 'Asigne un evaluador/a a una versión entregada con el formulario de abajo.' : null, 'compacto' => true])</td></tr>
                 @endforelse
                 </tbody>
             </table>
@@ -384,7 +387,7 @@
         @unless($esEvaluador)
         <div class="tab-pane fade" id="tab-decisiones">
             <h3 class="h6">Decisiones</h3>
-            <table class="table table-sm">
+            <table class="table table-sm tabla-tarjetas">
                 <thead><tr><th>Fecha</th><th>Tipo</th><th>Detalle</th><th>Responsable</th><th></th></tr></thead>
                 <tbody>
                 @forelse($tesis->decisiones as $d)
@@ -395,11 +398,11 @@
                             @if($d->estado_hacia)<span class="small text-muted">{{ $nombreEstado[$d->estado_desde] ?? $d->estado_desde }} → {{ $nombreEstado[$d->estado_hacia] ?? $d->estado_hacia }}</span><br>@endif
                             {{ $d->fundamento }}
                         </td>
-                        <td>{{ $d->autor->name }}<br><small class="text-muted">{{ Roles::nombre($d->rol_ejercido) }}</small></td>
+                        <td>@include('partials.persona', ['nombre' => $d->autor->name, 'detalle' => Roles::nombre($d->rol_ejercido), 'tam' => 'xs'])</td>
                         <td>@if($d->documento_ruta)<a href="{{ route('expediente.decision.documento', [$tesis, $d]) }}" class="btn btn-outline-primary btn-sm" title="Descargar {{ $d->documento_nombre }}" aria-label="Descargar documento de respaldo"><i class="fas fa-paperclip"></i></a>@endif</td>
                     </tr>
                 @empty
-                    <tr><td colspan="5" class="text-muted">Sin decisiones registradas.</td></tr>
+                    <tr><td colspan="5">@include('partials.vacio', ['dibujo' => 'documento', 'titulo' => 'Sin decisiones registradas', 'texto' => 'Los cambios de estado, prórrogas y cambios de guía quedarán aquí.', 'compacto' => true])</td></tr>
                 @endforelse
                 </tbody>
             </table>
@@ -433,7 +436,7 @@
             @endif
 
             <h3 class="h6">Actas</h3>
-            <table class="table table-sm">
+            <table class="table table-sm tabla-tarjetas">
                 <thead><tr><th>Tipo</th><th>Número</th><th>Fecha</th><th><span data-bs-toggle="tooltip" title="Código que permite comprobar que el archivo no fue alterado después de subirlo">Huella <i class="far fa-question-circle text-muted"></i></span></th><th></th></tr></thead>
                 <tbody>
                 @forelse($tesis->actas as $acta)
@@ -445,7 +448,7 @@
                         <td><a href="{{ route('expediente.acta.descargar', [$tesis, $acta]) }}" class="btn btn-outline-primary btn-sm" title="Descargar acta" aria-label="Descargar acta"><i class="fas fa-download"></i></a></td>
                     </tr>
                 @empty
-                    <tr><td colspan="5" class="text-muted">Sin actas registradas.</td></tr>
+                    <tr><td colspan="5">@include('partials.vacio', ['dibujo' => 'carpeta', 'titulo' => 'Sin actas registradas', 'texto' => $permisos['gestionar'] ? 'Registre la primera con el formulario de abajo.' : null, 'compacto' => true])</td></tr>
                 @endforelse
                 </tbody>
             </table>
@@ -474,14 +477,14 @@
         <div class="tab-pane fade" id="tab-bitacora">
             <p class="small text-muted">Registro inalterable: cada evento guarda la huella del anterior, por lo que cualquier modificación es detectable.</p>
             <div class="table-responsive">
-                <table class="table table-sm">
+                <table class="table table-sm tabla-tarjetas">
                     <thead><tr><th>Fecha</th><th>Acción</th><th>Persona</th><th>Rol</th><th><span data-bs-toggle="tooltip" title="Cada evento guarda la huella del anterior: cualquier alteración es detectable">Huella <i class="far fa-question-circle text-muted"></i></span></th></tr></thead>
                     <tbody>
                     @foreach($tesis->eventos as $e)
                         <tr>
                             <td class="text-nowrap small">{{ $e->created_at->format('d/m/Y H:i:s') }}</td>
                             <td class="small">{{ str_replace('_', ' ', $e->accion) }}</td>
-                            <td class="small">{{ $e->autor?->name ?? 'Sistema' }}</td>
+                            <td class="small">@include('partials.persona', ['nombre' => $e->autor?->name ?? 'Sistema', 'tam' => 'xs'])</td>
                             <td class="small">{{ Roles::nombre($e->rol_ejercido) }}</td>
                             <td><span class="hash" title="{{ $e->hash }}">{{ substr($e->hash, 0, 12) }}…</span></td>
                         </tr>

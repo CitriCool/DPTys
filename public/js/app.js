@@ -74,9 +74,57 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Los mensajes de éxito flotantes se ocultan solos
-    document.querySelectorAll('.alerta-flotante').forEach(alerta => {
-        setTimeout(() => bootstrap.Alert.getOrCreateInstance(alerta).close(), 7000);
+    // Avisos tipo toast: dpToast('mensaje', 'exito'|'error'|'info')
+    window.dpToast = function (mensaje, tipo = 'exito') {
+        const contenedor = document.getElementById('toasts');
+        if (!contenedor) return;
+        const colores = { exito: 'var(--dp-ok)', error: 'var(--dp-peligro)', info: 'var(--dp-info)' };
+        const iconos = { exito: 'fa-check-circle', error: 'fa-exclamation-circle', info: 'fa-info-circle' };
+        const toast = document.createElement('div');
+        toast.className = 'toast-dp';
+        toast.setAttribute('role', 'status');
+        toast.style.borderLeftColor = colores[tipo];
+        toast.innerHTML = `<i class="fas ${iconos[tipo]} toast-icono" style="color:${colores[tipo]}"></i><span></span><button type="button" class="btn-close" aria-label="Cerrar"></button>`;
+        toast.querySelector('span').textContent = mensaje;
+        const cerrar = () => { toast.classList.add('saliendo'); setTimeout(() => toast.remove(), 300); };
+        toast.querySelector('.btn-close').addEventListener('click', cerrar);
+        contenedor.appendChild(toast);
+        setTimeout(cerrar, 6000);
+    };
+    const inicial = document.getElementById('toastInicial');
+    if (inicial) dpToast(inicial.dataset.mensaje, 'exito');
+
+    // Modo oscuro
+    document.getElementById('botonTema')?.addEventListener('click', function () {
+        const oscuro = document.body.classList.toggle('modo-oscuro');
+        try { localStorage.setItem('dptys-tema', oscuro ? 'oscuro' : 'claro'); } catch (e) {}
+        document.dispatchEvent(new CustomEvent('dptys:tema', { detail: { oscuro } }));
+    });
+
+    // Tablas que se vuelven tarjetas en el celular: toma las etiquetas del encabezado
+    document.querySelectorAll('table.tabla-tarjetas').forEach(tabla => {
+        const titulos = [...tabla.querySelectorAll('thead th')].map(th => th.textContent.trim());
+        tabla.querySelectorAll('tbody tr').forEach(fila => {
+            [...fila.children].forEach((celda, i) => {
+                if (!celda.hasAttribute('data-etiqueta') && titulos[i]) celda.setAttribute('data-etiqueta', titulos[i]);
+            });
+        });
+    });
+
+    // Esqueleto de carga al filtrar o paginar listados: <div class="cargando-contenedor" data-cargando-con="#idForm">
+    document.querySelectorAll('[data-cargando-con]').forEach(caja => {
+        const activar = () => caja.classList.add('cargando');
+        document.querySelector(caja.dataset.cargandoCon)?.addEventListener('submit', activar);
+        caja.querySelectorAll('.pagination a, thead a').forEach(a => a.addEventListener('click', activar));
+    });
+    window.addEventListener('pageshow', () => document.querySelectorAll('.cargando').forEach(c => c.classList.remove('cargando')));
+
+    // Línea de tiempo: en pantallas angostas, mostrar el hito actual
+    document.querySelectorAll('.linea-tiempo').forEach(linea => {
+        const actual = linea.querySelector('.actual');
+        if (actual && linea.scrollWidth > linea.clientWidth) {
+            linea.scrollLeft = actual.offsetLeft - linea.clientWidth / 2 + actual.offsetWidth / 2;
+        }
     });
 
     // Tooltips de Bootstrap

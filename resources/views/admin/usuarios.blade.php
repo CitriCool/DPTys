@@ -18,12 +18,12 @@
                     <input type="search" class="form-control form-control-sm mb-3" placeholder="Buscar por nombre, correo o rol…" data-filtrar="#tablaUsuarios">
                 </div>
                 <div class="card-body table-responsive p-0">
-                    <table class="table table-hover mb-0" id="tablaUsuarios">
+                    <table class="table table-hover mb-0 tabla-tarjetas" id="tablaUsuarios">
                         <thead><tr><th>Nombre</th><th>Roles</th><th>Programas</th><th>Acceso</th><th class="text-end">Acciones</th></tr></thead>
                         <tbody>
                         @foreach($usuarios as $u)
                             <tr class="{{ $u->puedeIngresar() ? '' : 'text-muted' }} {{ $e && $e->id === $u->id ? 'table-primary' : '' }}">
-                                <td>{{ $u->name }}<small class="d-block text-muted">{{ $u->email }}</small></td>
+                                <td class="td-principal">@include('partials.persona', ['nombre' => $u->name, 'detalle' => $u->email])</td>
                                 <td>@foreach($u->roles as $r)<span class="badge bg-light text-dark border mb-1">{{ \App\Support\Roles::nombre($r->name) }}</span> @endforeach</td>
                                 <td class="small">{{ $u->programas->pluck('sigla')->unique()->join(', ') ?: '—' }}</td>
                                 <td class="small">
